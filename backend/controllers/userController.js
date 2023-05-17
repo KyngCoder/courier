@@ -5,6 +5,8 @@ const { Users, Login } = require("../models");
 
 const generateUniqueNumber = require("../util/generateUniqueNumber");
 
+const jwt = require('jsonwebtoken');
+
 const registerUser = async (req, res) => {
   const {
     firstName,
@@ -67,12 +69,16 @@ const registerUser = async (req, res) => {
     // Associate the User record with the Login record
     await login.setUser(user);
 
-    return res.status(201).json(user);
+    // Generate a JWT token
+    const token = jwt.sign({ userId: user.member_no }, 'secret', { expiresIn: '24h' });
+
+    return res.status(201).json({ user, token });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "An error occurred while registering" });
   }
 };
+
 
 
 
