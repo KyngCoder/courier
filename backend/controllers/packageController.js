@@ -1,15 +1,15 @@
 const { Op } = require("sequelize");
 
+const { Users, Packages } = require("../models");
+const generateUniqueAirwayNo = require("../util/airwayNumber");
 
-const { Users, Packages} = require("../models");
-
+const uniqueAirwayNo = generateUniqueAirwayNo();
 
 const createPackage = async (req, res) => {
   try {
     const {
       member_no,
       fullName,
-      airwayBillNo,
       description,
       deliveryStatus,
       status,
@@ -18,25 +18,25 @@ const createPackage = async (req, res) => {
 
     // Find the user by member_no
     const user = await Users.findOne({ where: { member_no } });
-
+    console.log("user", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log(cost)
+    console.log(cost);
 
     // Create a new package associated with the user
     const package = await Packages.create({
       member_no,
       fullName,
-      airwayBillNo,
+      airwayBillNo:uniqueAirwayNo,
       description,
       deliveryStatus,
       status,
       cost,
     });
 
-    return res.status(201).json(package);
+    return res.status(200).json(package);
   } catch (error) {
     console.error(error);
     return res
@@ -46,9 +46,8 @@ const createPackage = async (req, res) => {
 };
 
 const myPackage = async (req, res) => {
-
   const { member_no } = req.params;
-  console.log(member_no)
+  console.log(member_no);
 
   try {
     // Find the user based on the member_no
@@ -61,13 +60,14 @@ const myPackage = async (req, res) => {
     // Retrieve the packages associated with the user
     const packages = await Packages.findAll({ where: { member_no } });
 
-    return res.status(200).json({  packages });
+    return res.status(200).json({ packages });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "An error occurred while retrieving user packages" });
+    return res
+      .status(500)
+      .json({ message: "An error occurred while retrieving user packages" });
   }
-
-}
+};
 
 const updatePackageStatus = async (req, res) => {
   const { packageId } = req.params;
@@ -85,19 +85,22 @@ const updatePackageStatus = async (req, res) => {
     package.status = status;
     await package.save();
 
-    return res.status(200).json({ message: "Package status updated successfully" });
+    return res
+      .status(200)
+      .json({ message: "Package status updated successfully" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "An error occurred while updating package status" });
+    return res
+      .status(500)
+      .json({ message: "An error occurred while updating package status" });
   }
 };
-
 
 const updatePackageDeliveryStatus = async (req, res) => {
   const { packageId } = req.params;
   const { deliveryStatus } = req.body;
 
-  console.log(packageId, deliveryStatus)
+  console.log(packageId, deliveryStatus);
 
   try {
     // Find the package by its ID
@@ -111,21 +114,23 @@ const updatePackageDeliveryStatus = async (req, res) => {
     package.deliveryStatus = deliveryStatus;
     await package.save();
 
-    return res.status(200).json({ message: "Package delivery status updated successfully" });
+    return res
+      .status(200)
+      .json({ message: "Package delivery status updated successfully" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "An error occurred while updating package delivery status" });
+    return res
+      .status(500)
+      .json({
+        message: "An error occurred while updating package delivery status",
+      });
   }
 };
-
-
-
-
 
 const getAllPackages = async (req, res) => {
   try {
     const { search, status } = req.query;
-    console.log("search",search)
+    console.log("search", search);
 
     let packages;
 
@@ -145,7 +150,9 @@ const getAllPackages = async (req, res) => {
     return res.status(200).json(packages);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "An error occurred while fetching packages" });
+    return res
+      .status(500)
+      .json({ message: "An error occurred while fetching packages" });
   }
 };
 
@@ -167,8 +174,10 @@ const filterPackagesByStatus = (packages, status) => {
   return packages.filter((pkg) => pkg.status === status);
 };
 
-
-
-
-
-module.exports = {createPackage, myPackage, updatePackageStatus, updatePackageDeliveryStatus, getAllPackages}
+module.exports = {
+  createPackage,
+  myPackage,
+  updatePackageStatus,
+  updatePackageDeliveryStatus,
+  getAllPackages,
+};

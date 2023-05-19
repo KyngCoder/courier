@@ -5,7 +5,7 @@ const { Users, Login } = require("../models");
 
 const generateUniqueNumber = require("../util/generateUniqueNumber");
 
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 const registerUser = async (req, res) => {
   const {
@@ -22,11 +22,14 @@ const registerUser = async (req, res) => {
   } = req.body;
 
   try {
+    console.log("about to");
     // Generate a unique member number
     const memberNumber = await generateUniqueNumber();
-
+    console.log(memberNumber);
     // Check if the member number already exists
-    const memberExists = await Users.findOne({ where: { member_no: memberNumber } });
+    const memberExists = await Users.findOne({
+      where: { member_no: memberNumber },
+    });
     if (memberExists) {
       return res.status(400).json({ message: "Member number already exists" });
     }
@@ -45,7 +48,7 @@ const registerUser = async (req, res) => {
 
     // Hash the password using bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    console.log(hashedPassword);
     // Create a new Login record and set its username to the user's telephone number
     const login = await Login.create({
       userName: userName,
@@ -65,22 +68,24 @@ const registerUser = async (req, res) => {
       isAdmin: false,
       member_no: memberNumber,
     });
+    console.log("user", user);
 
     // Associate the User record with the Login record
     await login.setUser(user);
 
     // Generate a JWT token
-    const token = jwt.sign({ userId: user.member_no }, 'secret', { expiresIn: '24h' });
+    const token = jwt.sign({ userId: user.member_no }, "secret", {
+      expiresIn: "24h",
+    });
 
     return res.status(201).json({ user, token });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "An error occurred while registering" });
+    return res
+      .status(500)
+      .json({ message: "An error occurred while registering" });
   }
 };
-
-
-
 
 const loginUser = async (req, res) => {
   const { userName, password } = req.body;
@@ -116,9 +121,20 @@ const loginUser = async (req, res) => {
     return res.status(200).json({ user, token });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "An error occurred while logging in" });
+    return res
+      .status(500)
+      .json({ message: "An error occurred while logging in" });
   }
 };
 
+const getAllUsers = async (req, res) => {
+  try{
+    const users = await Users.findAll();
+    return res.status(200).json({data: users})
+  }catch (err){
+    console.error(err);
+    return res.json({msg: "no users"})
+  }
+}
 
-module.exports = { registerUser, loginUser };
+module.exports = { registerUser, loginUser, getAllUsers };
