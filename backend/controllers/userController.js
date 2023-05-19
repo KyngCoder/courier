@@ -90,6 +90,7 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   const { userName, password } = req.body;
 
+
   try {
     // Find the login record with the given username and include the associated User record
     const login = await Login.findOne({
@@ -128,13 +129,65 @@ const loginUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
-  try{
+  try {
     const users = await Users.findAll();
-    return res.status(200).json({data: users})
-  }catch (err){
+    return res.status(200).json({ data: users });
+  } catch (err) {
     console.error(err);
-    return res.json({msg: "no users"})
+    return res.json({ msg: "no users" });
   }
-}
+};
 
-module.exports = { registerUser, loginUser, getAllUsers };
+
+
+const updateProfile = async (req, res) => {
+  const { firstName, lastName, password, oldPassword } = req.body;
+  const { userId } = req.params;
+
+  try {
+    // Find the user by ID
+    const user = await Users.findByPk(userId);
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log(userId)
+    console.log(user.id)
+    // Find the login record for the user
+    const login = await Login.findOne({
+      where: { userId: req.params.userId },
+    });
+
+    // Verify the old password
+    const isPasswordValid = await bcrypt.compare(oldPassword, login.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid old password" });
+    }
+
+    // Update the user's first name and last name
+    user.firstName = firstName;
+    user.lastName = lastName;
+
+    // Check if the password needs to be updated
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+      login.password = hashedPassword;
+    
+
+    // Save the updated user and login
+    await user.save();
+    await login.save();
+
+    res.status(200).json({ message: "User profile updated successfully", user, login });
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    res.status(500).json({ message: "Error updating user profile" });
+  }
+};
+
+
+
+
+module.exports = { registerUser, loginUser, getAllUsers, updateProfile };
