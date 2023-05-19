@@ -49,7 +49,7 @@ const registerUser = async (req, res) => {
     // Hash the password using bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log(hashedPassword);
-    // Create a new Login record and set its username to the user's telephone number
+    // Create a new Login record 
     const login = await Login.create({
       userName: userName,
       password: hashedPassword,
@@ -170,7 +170,7 @@ const updateProfile = async (req, res) => {
     user.firstName = firstName;
     user.lastName = lastName;
 
-    // Check if the password needs to be updated
+    
   
       const hashedPassword = await bcrypt.hash(password, 10);
       login.password = hashedPassword;
